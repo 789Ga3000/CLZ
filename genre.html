@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}{{ genre_name }} Movies - COOLGENZ.COM{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/recent.css') }}">
+
+<!-- Loading indicator -->
+<div id="loading-indicator" class="loading-indicator" style="display: none;">
+    <div class="loading-bar"></div>
+</div>
+
+<div class="section-header">
+    <h1 class="recent-heading">{{ genre_name }} </h1>
+    <div class="sort-filter">
+        <!-- Change: submit sort as GET so server can return paginated/sorted results -->
+        <select id="sort-select" onchange="applySort()">
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+            <option value="oldest" {% if sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+            <option value="title" {% if sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+        </select>
+    </div>
+</div>
+
+{% if movies %}
+    <div class="results-count">
+        {# Support either total_movies or total_count from backend; fallback to movies|length #}
+        {% set total = (total_movies if total_movies is defined else (total_count if total_count is defined else movies|length)) %}
+        {% set pp = (per_page if per_page is defined else movies|length) %}
+        {% set start_index = (page - 1) * pp + 1 if page is defined else 1 %}
+        {% set end_index = (start_index + movies|length - 1) if movies|length > 0 else 0 %}
+        <p><span id="showing-count">Showing {{ start_index }}-{{ end_index }} of {{ total }}</span> Videos found</p>
+    </div>
+    
+    <div class="movie-grid" id="movie-grid">
+        {% for movie in movies %}
+        {% set movie_number = loop.index0 + start_index %}
+        <div class="movie-card" data-date-added="{{ movie.created_at if movie.created_at is defined else (movie.date_added if movie.date_added is defined else '') }}" data-title="{{ movie.title|lower }}" data-movie-number="{{ movie_number }}">
+            <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="movie-link">
+                {% set poster_src = media_url(movie.image, 'images', url_for('static', filename='images/placeholder.jpg')) %}
+                <img src="{{ url_for('static', filename='images/placeholder.jpg') }}" 
+                     data-src="{{ poster_src }}"
+                     alt="{{ movie.title }}"
+                     class="lazy-image">
+            </a>
+            <div class="movie-title">{{ movie.title }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <!-- Server-side Pagination Controls -->
+    <div class="pagination-container">
+        <div class="pagination">
+            {# Prev link #}
+            {% if page is defined and page > 1 %}
+                <a href="?page={{ page - 1 }}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-button" id="prev-page">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Previous
+                </a>
+            {% else %}
+                <span class="pagination-button" aria-disabled="true" style="opacity:0.5;pointer-events:none;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Previous
+                </span>
+            {% endif %}
+            
+            <div id="page-numbers" class="page-numbers">
+                {# Only build if total_pages provided, otherwise omit #}
+                {% if total_pages is defined and total_pages|int > 1 %}
+                    {% if total_pages <= 9 %}
+                        {% for p in range(1, total_pages + 1) %}
+                            {% if p == page %}
+                                <span class="page-button active">{{ p }}</span>
+                            {% else %}
+                                <a class="page-button" href="?page={{ p }}{% if sort %}&sort={{ sort }}{% endif %}">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% if page == 1 %}
+                            <span class="page-button active">1</span>
+                        {% else %}
+                            <a class="page-button" href="?page=1{% if sort %}&sort={{ sort }}{% endif %}">1</a>
+                        {% endif %}
+                        
+                        {% set start_page = page - 2 if page - 2 > 2 else 2 %}
+                        {% set end_page = page + 2 if page + 2 < total_pages - 1 else total_pages - 1 %}
+                        
+                        {% if start_page > 2 %}
+                            <span class="page-button ellipsis">...</span>
+                        {% endif %}
+                        
+                        {% for p in range(start_page, end_page + 1) %}
+                            {% if p == page %}
+                                <span class="page-button active">{{ p }}</span>
+                            {% else %}
+                                <a class="page-button" href="?page={{ p }}{% if sort %}&sort={{ sort }}{% endif %}">{{ p }}</a>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if end_page < total_pages - 1 %}
+                            <span class="page-button ellipsis">...</span>
+                        {% endif %}
+                        
+                        {% if page == total_pages %}
+                            <span class="page-button active">{{ total_pages }}</span>
+                        {% else %}
+                            <a class="page-button" href="?page={{ total_pages }}{% if sort %}&sort={{ sort }}{% endif %}">{{ total_pages }}</a>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+            
+            {# Next link #}
+            {% if page is defined and total_pages is defined and page < total_pages %}
+                <a href="?page={{ page + 1 }}{% if sort %}&sort={{ sort }}{% endif %}" class="pagination-button" id="next-page">
+                    Next
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
+            {% else %}
+                <span class="pagination-button" aria-disabled="true" style="opacity:0.5;pointer-events:none;">
+                    Next
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            {% endif %}
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No {{ genre_name }} movies available.
+    </div>
+{% endif %}
+
+<div class="footer-links">
+    <a href="{{ url_for('home') }}">← Back to Home</a>
+</div>
+
+<style>
+    /* Loading indicator styles */
+    .loading-indicator {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background-color: transparent;
+        z-index: 9999;
+    }
+    
+    .loading-bar {
+        height: 100%;
+        width: 0%;
+        background-color: #e50914;
+        transition: width 0.4s ease;
+    }
+    
+    /* Smooth transitions for page changes */
+    .movie-grid {
+        opacity: 1;
+        transition: opacity 0.3s ease;
+    }
+    
+    .movie-grid.fade-out {
+        opacity: 0.5;
+    }
+    
+    /* Movie link transitions */
+    .movie-link {
+        transition: transform 0.2s ease;
+    }
+    
+    .movie-link:hover {
+        transform: scale(1.03);
+    }
+    
+    /* Existing styles */
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .sort-filter select {
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    
+    .results-count {
+        margin-bottom: 15px;
+        color: #aaa;
+        font-size: 14px;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0 20px;
+    }
+    
+    .pagination {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .pagination-button {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 4px;
+        padding: 8px 16px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+    
+    .pagination-button:hover:not(:disabled) {
+        background-color: #555;
+    }
+    
+    .pagination-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .page-numbers {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .page-button {
+        min-width: 38px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #333;
+        color: white;
+        border: 1px solid #444;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+    }
+    
+    .page-button:hover:not(.active) {
+        background-color: #444;
+    }
+    
+    .page-button.active {
+        background-color: #e50914;
+        border-color: #e50914;
+    }
+    
+    .page-button.ellipsis {
+        background: transparent;
+        border: none;
+        cursor: default;
+        min-width: auto;
+    }
+    
+    @media (max-width: 768px) {
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .page-button {
+            min-width: 34px;
+            height: 34px;
+            font-size: 13px;
+        }
+        
+        .pagination-button {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+    }
+</style>
+
+<script>
+    // Lightweight client script:
+    // - applySort: navigate to same listing with chosen sort and page=1
+    // - show a loading indicator on navigation clicks
+    // - lazy-load images via IntersectionObserver with fallback
+    
+    function getQueryString(params) {
+        const qs = new URLSearchParams(window.location.search);
+        Object.keys(params).forEach(k => {
+            if (params[k] === null || params[k] === undefined || params[k] === '') {
+                qs.delete(k);
+            } else {
+                qs.set(k, params[k]);
+            }
+        });
+        return qs.toString() ? '?' + qs.toString() : '';
+    }
+    
+    function applySort() {
+        const sortValue = document.getElementById('sort-select').value;
+        // go to page 1 when changing sort
+        const qs = getQueryString({ page: 1, sort: sortValue });
+        showLoadingIndicator();
+        window.location.href = window.location.pathname + qs;
+    }
+    
+    // Loading indicator functions (kept simple)
+    function showLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (!indicator) return;
+        indicator.style.display = 'block';
+        setTimeout(() => {
+            const bar = indicator.querySelector('.loading-bar');
+            if (bar) bar.style.width = '70%';
+        }, 10);
+    }
+    function hideLoadingIndicator() {
+        const indicator = document.getElementById('loading-indicator');
+        if (!indicator) return;
+        const bar = indicator.querySelector('.loading-bar');
+        if (bar) bar.style.width = '100%';
+        setTimeout(() => {
+            indicator.style.display = 'none';
+            if (bar) bar.style.width = '0%';
+        }, 300);
+    }
+    
+    // Show loading when user clicks any pagination or movie link
+    document.addEventListener('click', function(e) {
+        const el = e.target.closest('a');
+        if (!el) return;
+        // Only show loading for internal navigation (same host/path)
+        const href = el.getAttribute('href');
+        if (!href) return;
+        // Consider relative links or same-origin absolute links
+        const isInternal = href.startsWith('?') || href.startsWith('/') || href.startsWith(window.location.pathname);
+        if (isInternal) {
+            showLoadingIndicator();
+        }
+    }, true);
+    
+    // Lazy load images with IntersectionObserver
+    document.addEventListener('DOMContentLoaded', function() {
+        const lazyImages = [].slice.call(document.querySelectorAll('img.lazy-image'));
+        if ('IntersectionObserver' in window) {
+            const io = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        if (img.dataset.src) {
+                            img.src = img.dataset.src;
+                            img.removeAttribute('data-src');
+                        }
+                        img.classList.remove('lazy-image');
+                        observer.unobserve(img);
+                    }
+                });
+            }, {
+                rootMargin: '200px 0px',
+                threshold: 0.01
+            });
+            lazyImages.forEach(img => io.observe(img));
+        } else {
+            // Fallback: load all images
+            lazyImages.forEach(img => {
+                if (img.dataset.src) img.src = img.dataset.src;
+                img.classList.remove('lazy-image');
+            });
+        }
+    });
+</script>
+{% endblock %}

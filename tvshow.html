@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>TV Shows</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <style>
+        body {
+            background-color: #121212;
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #e50914;
+            padding: 20px;
+        }
+
+        h2 {
+            margin: 10px 20px 30px;
+            font-size: 28px;
+        }
+
+        .tvshow-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 0 20px 40px;
+        }
+
+        .movie-card {
+            width: 160px;
+            text-align: center;
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 230px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: transform 0.2s;
+        }
+
+        .movie-card img:hover {
+            transform: scale(1.05);
+        }
+
+        .movie-title {
+            margin-top: 10px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="logo">MOVIE99.FUN</div>
+    <h2>TV Shows</h2>
+
+    <div class="tvshow-grid">
+        {% for movie in movies %}
+        <div class="movie-card">
+            <a href="{{ url_for('movie_detail', movie_id=movie['id']) }}">
+                {% set poster_src = media_url(movie['image'], 'images', url_for('static', filename='images/placeholder.jpg')) %}
+                <img src="{{ poster_src }}" alt="{{ movie['title'] }}">
+            </a>
+            <div class="movie-title">{{ movie['title'] }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

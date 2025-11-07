@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }}{% endblock %}
+
+{% block head %}
+    {{ super() }}
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <!-- Plyr -->
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+
+    <style>
+        /* GLOBAL FIX */
+        html, body {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+            background: #0c0c0c;
+            color: #fff;
+            font-family: system-ui, sans-serif;
+        }
+        * {
+            box-sizing: border-box;
+        }
+
+        /* MAIN WRAPPER */
+        .page-container {
+            width: 100%;
+            max-width: 520px;
+            margin: 0 auto;
+            padding: 10px;
+        }
+
+        /* VIDEO CONTAINER — PERFECT MOBILE */
+        .player-box {
+            width: 100%;
+            position: relative;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .player-box video,
+        .player-box .plyr,
+        .player-box .plyr__video-wrapper {
+            position: absolute;
+            inset: 0;
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+        }
+
+        /* Title */
+        .title-block h1 {
+            margin: 12px 0 6px;
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+        /* EPISODES */
+        .episode-list {
+            margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .episode-btn {
+            background: #272727;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .episode-btn.active {
+            background: #e31b53;
+        }
+
+        /* Related section */
+        .section-title {
+            font-size: 16px;
+            margin: 14px 0 8px;
+        }
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .related-grid img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        .related-title {
+            font-size: 13px;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* TAGS */
+        .tags-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 12px 0;
+        }
+        .tag-chip {
+            background: #1c1c1c;
+            padding: 6px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            text-decoration: none;
+            color: #ccc;
+        }
+
+        /* Description */
+        .description-box {
+            background: #111;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #bdbdbd;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="page-container">
+
+    {% if video_url %}
+    <!-- ✅ PLAYER -->
+    <div class="player-box">
+        <video id="main-player" controls playsinline preload="metadata"
+               controlslist="nodownload"
+               poster="{{ media_url(movie.image, 'images') }}">
+            <source src="{{ video_url }}" type="{{ guess_video_mime(video_url) }}">
+        </video>
+    </div>
+    {% endif %}
+
+    <!-- ✅ MOVIE TITLE -->
+    <div class="title-block">
+        <h1>{{ movie.title }}</h1>
+    </div>
+
+    <!-- ✅ EPISODES -->
+    {% if movie.episode_sources|length > 1 %}
+    <div class="episode-list">
+        {% for ep in movie.episode_sources %}
+        <button class="episode-btn {% if loop.first %}active{% endif %}"
+                data-url="{{ ep.url }}" data-mime="{{ ep.mime }}">
+            Ep {{ ep.number }}
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ✅ TAGS -->
+    {% if movie.genres_list %}
+    <div class="tags-list">
+        {% for genre in movie.genres_list %}
+        <a class="tag-chip" href="{{ url_for('genre', genre_name=genre) }}">{{ genre }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ✅ DESCRIPTION -->
+    {% if movie.description %}
+    <div class="description-box">
+        {{ movie.description }}
+    </div>
+    {% endif %}
+
+    <!-- ✅ RELATED MOVIES -->
+    {% if related_movies %}
+    <h2 class="section-title">More Like This</h2>
+    <div class="related-grid">
+        {% for r in related_movies %}
+        <a href="{{ url_for('movie_detail', movie_id=r.id) }}" style="text-decoration:none;">
+            <img src="{{ media_url(r.image, 'images') }}" alt="{{ r.title }}">
+            <div class="related-title">{{ r.title }}</div>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+    {{ super() }}
+
+    <!-- Plyr -->
+    <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const video = document.getElementById("main-player");
+            if (!video) return;
+
+            const player = new Plyr(video, {
+                ratio: "16:9"
+            });
+
+            // episode switch
+            document.querySelectorAll(".episode-btn").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    player.source = {
+                        type: "video",
+                        sources: [
+                            {
+                                src: btn.dataset.url,
+                                type: btn.dataset.mime
+                            }
+                        ]
+                    };
+
+                    document.querySelector(".episode-btn.active")?.classList.remove("active");
+                    btn.classList.add("active");
+
+                    player.play();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                });
+            });
+        });
+    </script>
+{% endblock %}

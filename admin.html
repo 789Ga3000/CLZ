@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Movie99</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00f0ff;
+            --primary-dark: #0066ff;
+            --secondary: #ff2d75;
+            --dark: #0a0a1a;
+            --darker: #050510;
+            --light: #e0e0ff;
+            --card-bg: rgba(10, 15, 30, 0.7);
+            --success: #00ffaa;
+            --warning: #ffaa00;
+            --error: #ff2d75;
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            background-color: var(--darker);
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(255, 45, 117, 0.1) 0%, transparent 50%);
+            color: var(--light);
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        
+        h2, h3, h4 {
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        h2 {
+            text-align: center;
+            color: var(--primary);
+            font-size: 2.5rem;
+            margin: 1.5rem 0;
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+            position: relative;
+            padding-bottom: 1rem;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+            border-radius: 3px;
+        }
+        
+        h3 {
+            color: var(--light);
+            font-size: 1.8rem;
+            margin: 2rem 0 1.5rem;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Glassmorphism Card */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Form Elements */
+        form {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: var(--light);
+            font-family: 'Roboto', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
+        }
+        
+        select[multiple] {
+            height: auto;
+            min-height: 120px;
+            padding: 0;
+        }
+        
+        select[multiple] option {
+            padding: 10px 15px;
+            border-bottom: 1px solid var(--glass-border);
+            transition: background 0.2s;
+        }
+        
+        select[multiple] option:hover {
+            background: var(--primary-dark);
+            color: white;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+        }
+        
+        .checkbox-container input {
+            width: auto;
+            margin-right: 10px;
+            accent-color: var(--primary);
+        }
+
+        .field-hint {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: rgba(224, 224, 255, 0.75);
+        }
+
+        .upload-progress {
+            display: none;
+            margin-top: 1.2rem;
+        }
+
+        .progress-track {
+            height: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+            transition: width 0.2s ease-in-out;
+        }
+
+        .progress-stats {
+            margin-top: 0.45rem;
+            font-size: 0.85rem;
+            text-align: right;
+            color: rgba(224, 224, 255, 0.8);
+        }
+
+        .info-banner {
+            background: rgba(0, 240, 255, 0.07);
+            border: 1px solid rgba(0, 240, 255, 0.2);
+            color: var(--light);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .info-banner strong {
+            color: var(--primary);
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--darker);
+            border: none;
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 240, 255, 0.4);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary), #ff0066);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 45, 117, 0.3);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(255, 45, 117, 0.4);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            box-shadow: none;
+        }
+        
+        .btn-outline:hover {
+            background: rgba(0, 240, 255, 0.1);
+        }
+        
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 0.8rem;
+        }
+        
+        /* Admin Navigation */
+        .admin-nav {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .admin-nav a {
+            padding: 12px 24px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+        
+        .admin-nav a.active {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--darker);
+            box-shadow: 0 4px 15px rgba(0, 240, 255, 0.3);
+        }
+        
+        .admin-nav a:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--light);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .admin-nav a:not(.active):hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            margin: 2rem 0;
+            border-radius: 8px;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: transparent;
+        }
+        
+        th {
+            background: linear-gradient(to right, var(--primary-dark), var(--primary));
+            color: var(--darker);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--glass-border);
+            vertical-align: middle;
+        }
+        
+        tr:last-child td {
+            border-bottom: none;
+        }
+        
+        tr:hover td {
+            background: rgba(0, 240, 255, 0.05);
+        }
+        
+        /* Movie Thumbnail */
+        .thumb {
+            height: 60px;
+            width: auto;
+            border-radius: 4px;
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s;
+        }
+        
+        .thumb:hover {
+            transform: scale(1.1);
+        }
+        
+        /* Genre Tags */
+        .genre-tag {
+            display: inline-block;
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--primary);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .badge-featured {
+            background: linear-gradient(135deg, var(--secondary), #ff0066);
+            color: white;
+        }
+        
+        .badge-default {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-btn i {
+            font-size: 0.8rem;
+        }
+        
+        .edit-btn {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+        }
+        
+        .edit-btn:hover {
+            background: rgba(0, 240, 255, 0.2);
+        }
+        
+        .delete-btn {
+            background: rgba(255, 45, 117, 0.1);
+            color: var(--secondary);
+            border: 1px solid rgba(255, 45, 117, 0.3);
+        }
+        
+        .delete-btn:hover {
+            background: rgba(255, 45, 117, 0.2);
+        }
+        
+        .watch-btn {
+            background: rgba(0, 255, 170, 0.1);
+            color: var(--success);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+        }
+        
+        .watch-btn:hover {
+            background: rgba(0, 255, 170, 0.2);
+        }
+        
+        /* Flash Messages */
+        .flash-message {
+            padding: 15px;
+            margin: 20px auto;
+            max-width: 800px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 500;
+            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .success {
+            background: rgba(0, 255, 170, 0.2);
+            color: var(--success);
+            border: 1px solid rgba(0, 255, 170, 0.3);
+        }
+        
+        .error {
+            background: rgba(255, 45, 117, 0.2);
+            color: var(--secondary);
+            border: 1px solid rgba(255, 45, 117, 0.3);
+        }
+        
+        /* Search Container */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+        
+        .search-form {
+            display: flex;
+            width: 100%;
+            max-width: 600px;
+            gap: 10px;
+        }
+        
+        .search-input {
+            flex-grow: 1;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(0, 240, 255, 0.2);
+        }
+        
+        /* New Genre Container */
+        .new-genre-container {
+            display: flex;
+            gap: 10px;
+            margin: 1rem 0;
+        }
+        
+        .new-genre-input {
+            flex-grow: 1;
+        }
+        
+        /* Footer Links */
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+        
+        /* Video Links Container */
+        .video-links-container {
+            margin-bottom: 1.5rem;
+        }
+        
+        .video-link-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        
+        .video-link-input {
+            flex-grow: 1;
+        }
+        
+        .remove-link-btn {
+            background: rgba(255, 45, 117, 0.2);
+            color: var(--secondary);
+            border: 1px solid rgba(255, 45, 117, 0.3);
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .remove-link-btn:hover {
+            background: rgba(255, 45, 117, 0.3);
+        }
+        
+        .add-link-btn {
+            background: rgba(0, 240, 255, 0.2);
+            color: var(--primary);
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 4px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+        }
+        
+        .add-link-btn:hover {
+            background: rgba(0, 240, 255, 0.3);
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            h2 {
+                font-size: 2rem;
+            }
+            
+            .admin-nav {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            table {
+                display: block;
+            }
+            
+            th, td {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+            }
+            
+            .video-link-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+        
+        /* Futuristic elements */
+        .holographic-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .holographic-effect::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                to bottom right,
+                rgba(0, 240, 255, 0) 0%,
+                rgba(0, 240, 255, 0.1) 50%,
+                rgba(0, 240, 255, 0) 100%
+            );
+            transform: rotate(30deg);
+            animation: holographic 6s linear infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes holographic {
+            0% {
+                transform: rotate(30deg) translate(-30%, -30%);
+            }
+            100% {
+                transform: rotate(30deg) translate(30%, 30%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>MOVIE99 ADMIN DASHBOARD</h2>
+
+        <div class="admin-nav">
+            <a href="{{ url_for('admin') }}" class="active">Manage Movies</a>
+            <a href="{{ url_for('analytics') }}">View Analytics</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="card holographic-effect">
+            <div class="search-container">
+                <form class="search-form" action="{{ url_for('admin') }}" method="GET">
+                    <input type="text" name="search" class="search-input" placeholder="Search movies by title or genre..." value="{{ search_query if search_query }}">
+                    <button type="submit" class="btn btn-sm">Search</button>
+                    {% if search_query %}
+                        <a href="{{ url_for('admin') }}" class="btn btn-outline btn-sm">Clear</a>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <div class="card holographic-effect">
+            <h3>Add New Movie</h3>
+            <div class="info-banner">
+                <strong>Heads up:</strong> Uploading a movie file streams it directly to the remote storage server (up to <strong>300&nbsp;MB+</strong> per file). You can leave the URL fields empty when you upload the full movie. If the file is larger than the server limit, you&rsquo;ll get a warning so you can try a smaller file or contact support.
+            </div>
+            <form id="adminUploadForm" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="title">Movie Title</label>
+                    <input type="text" id="title" name="title" placeholder="Enter movie title" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Video Links (optional if you upload a movie file)</label>
+                    <div class="video-links-container" id="videoLinksContainer">
+                        <div class="video-link-group">
+                            <input type="text" name="links[]" class="video-link-input" placeholder="Enter video URL">
+                            <button type="button" class="remove-link-btn" onclick="removeVideoLink(this)" style="display: none;">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="add-link-btn" onclick="addVideoLink()">
+                        <span>+ Add Another Link</span>
+                    </button>
+                    <p class="field-hint">Leave these blank when you upload the full movie file.</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="file">Upload Movie File</label>
+                    <input type="file" id="file" name="file" accept="video/*">
+                    <p class="field-hint">Large files are streamed straight to the remote server.</p>
+                </div>
+                
+                <div class="form-group">
+                    <label for="genres">Select Genres</label>
+                    <select name="genres" id="genres" multiple required>
+                        {% for genre in all_genres %}
+                            <option value="{{ genre }}">{{ genre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Add New Genre</label>
+                    <div class="new-genre-container">
+                        <input type="text" name="new_genre" class="new-genre-input" placeholder="Enter new genre name">
+                        <button type="button" class="btn btn-sm" onclick="addNewGenre()">Add</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="image">Movie Poster</label>
+                    <input type="file" id="image" name="image" accept="image/*" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="trailer">Trailer Video (Optional)</label>
+                    <input type="file" id="trailer" name="trailer" accept="video/*">
+                </div>
+                
+                <div class="checkbox-container">
+                    <input type="checkbox" name="is_featured" id="is_featured" value="1">
+                    <label for="is_featured">Set as Featured Movie</label>
+                </div>
+                
+                <button type="submit" class="btn">Upload Movie</button>
+                <div class="upload-progress" id="uploadProgress">
+                    <div class="progress-track">
+                        <div class="progress-fill" id="uploadProgressFill"></div>
+                    </div>
+                    <div class="progress-stats" id="uploadProgressText">0%</div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card holographic-effect">
+            <h3>Movie Catalog</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Poster</th>
+                            <th>Title</th>
+                            <th>Genres</th>
+                            <th>Links</th>
+                            <th>Trailer</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movie in movies %}
+                        <tr>
+                            <td><img src="{{ media_url(movie.image, 'images', url_for('static', filename='images/placeholder.jpg')) }}" class="thumb" alt="{{ movie.title }} poster"></td>
+                            <td>{{ movie.title }}</td>
+                            <td>
+                                {% for genre in movie.genres_list %}
+                                    <span class="genre-tag">{{ genre }}</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for link in movie.links_list %}
+                                    <a href="{{ link }}" class="action-btn watch-btn" target="_blank">Ep {{ loop.index }}</a>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if movie.trailer %}
+                                    <a href="{{ media_url(movie.trailer, 'trailers') }}" class="action-btn watch-btn" target="_blank">Trailer</a>
+                                {% else %}
+                                    <span class="badge badge-default">None</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if movie.is_featured %}
+                                    <span class="badge badge-featured">Featured</span>
+                                {% else %}
+                                    <span class="badge badge-default">Standard</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{{ url_for('edit_movie', movie_id=movie.id) }}" class="action-btn edit-btn">Edit</a>
+                                    <a href="{{ url_for('delete_movie', movie_id=movie.id) }}" class="action-btn delete-btn" onclick="return confirm('Are you sure you want to delete this movie?')">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer-links">
+            <a href="{{ url_for('home') }}" class="btn btn-outline">← Back to Home</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-secondary">Logout</a>
+        </div>
+    </div>
+
+    <script>
+        function addNewGenre() {
+            const newGenreInput = document.querySelector('input[name="new_genre"]');
+            const genreSelect = document.getElementById('genres');
+            
+            if (newGenreInput.value.trim() === '') {
+                alert('Please enter a genre name');
+                return;
+            }
+            
+            // Check if the genre already exists
+            const existingGenres = Array.from(genreSelect.options).map(opt => opt.value);
+            if (existingGenres.includes(newGenreInput.value.trim())) {
+                alert('This genre already exists!');
+                return;
+            }
+            
+            // Add the new genre to the select
+            const newOption = document.createElement('option');
+            newOption.value = newGenreInput.value.trim();
+            newOption.textContent = newGenreInput.value.trim();
+            newOption.selected = true;
+            genreSelect.appendChild(newOption);
+            
+            // Clear the input
+            newGenreInput.value = '';
+            
+            // Add visual feedback
+            genreSelect.style.boxShadow = '0 0 0 2px rgba(0, 240, 255, 0.5)';
+            setTimeout(() => {
+                genreSelect.style.boxShadow = '';
+            }, 1000);
+        }
+
+        function addVideoLink() {
+            const container = document.getElementById('videoLinksContainer');
+            const newLinkGroup = document.createElement('div');
+            newLinkGroup.className = 'video-link-group';
+            
+            const newInput = document.createElement('input');
+            newInput.type = 'text';
+            newInput.name = 'links[]';
+            newInput.className = 'video-link-input';
+            newInput.placeholder = 'Enter video URL';
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'remove-link-btn';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = function() { removeVideoLink(this); };
+            
+            newLinkGroup.appendChild(newInput);
+            newLinkGroup.appendChild(removeBtn);
+            container.appendChild(newLinkGroup);
+            
+            // Show all remove buttons when there are multiple links
+            if (container.children.length > 1) {
+                const removeButtons = container.querySelectorAll('.remove-link-btn');
+                removeButtons.forEach(btn => btn.style.display = 'block');
+            }
+        }
+
+        function removeVideoLink(button) {
+            const linkGroup = button.parentElement;
+            const container = document.getElementById('videoLinksContainer');
+            
+            // Don't allow removing the last link
+            if (container.children.length > 1) {
+                linkGroup.remove();
+                
+                // Hide remove buttons if only one link remains
+                if (container.children.length === 1) {
+                    container.querySelector('.remove-link-btn').style.display = 'none';
+                }
+            }
+        }
+
+        // Initialize the first remove button as hidden
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstRemoveBtn = document.querySelector('.remove-link-btn');
+            if (firstRemoveBtn) {
+                firstRemoveBtn.style.display = 'none';
+            }
+
+            const adminForm = document.getElementById('adminUploadForm');
+            if (adminForm) {
+                const submitButton = adminForm.querySelector('button[type="submit"]');
+                const progressWrapper = document.getElementById('uploadProgress');
+                const progressFill = document.getElementById('uploadProgressFill');
+                const progressText = document.getElementById('uploadProgressText');
+                const originalButtonText = submitButton ? submitButton.textContent : '';
+
+                function resetProgress(message) {
+                    if (progressWrapper) {
+                        progressWrapper.style.display = 'none';
+                    }
+                    if (progressFill) {
+                        progressFill.style.width = '0%';
+                    }
+                    if (progressText) {
+                        progressText.textContent = '0%';
+                    }
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.textContent = originalButtonText;
+                    }
+                    if (message) {
+                        alert(message);
+                    }
+                }
+
+                adminForm.addEventListener('submit', function(event) {
+                    const hasFile = Array.from(adminForm.querySelectorAll('input[type="file"]'))
+                        .some(input => input.files && input.files.length > 0);
+
+                    if (!hasFile || !progressWrapper || !progressFill || !progressText || !submitButton) {
+                        return;
+                    }
+
+                    event.preventDefault();
+
+                    progressWrapper.style.display = 'block';
+                    progressFill.style.width = '0%';
+                    progressText.textContent = '0%';
+
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Uploading...';
+
+                    const xhr = new XMLHttpRequest();
+                    xhr.open(adminForm.method || 'POST', adminForm.getAttribute('action') || window.location.pathname, true);
+
+                    xhr.upload.addEventListener('progress', function(e) {
+                        if (e.lengthComputable) {
+                            const percent = Math.round((e.loaded / e.total) * 100);
+                            const loadedMB = (e.loaded / (1024 * 1024)).toFixed(1);
+                            const totalMB = (e.total / (1024 * 1024)).toFixed(1);
+                            progressFill.style.width = percent + '%';
+                            progressText.textContent = `${percent}% • ${loadedMB}/${totalMB} MB`;
+                        } else {
+                            progressFill.style.width = '100%';
+                            progressText.textContent = 'Uploading...';
+                        }
+                    });
+
+                    xhr.addEventListener('load', function() {
+                        if (xhr.status >= 200 && xhr.status < 400) {
+                            const locationHeader = xhr.getResponseHeader('Location');
+                            const redirectURL = xhr.responseURL || locationHeader || window.location.pathname;
+                            window.location.href = redirectURL;
+                        } else {
+                            let message = 'Upload failed. Please try again.';
+                            try {
+                                const data = JSON.parse(xhr.responseText);
+                                if (data && data.error) {
+                                    message = data.error;
+                                }
+                            } catch (err) {
+                                // ignore parse errors and use default message
+                            }
+                            resetProgress(message);
+                        }
+                    });
+
+                    xhr.addEventListener('error', function() {
+                        resetProgress('Network error during upload. Please try again.');
+                    });
+
+                    xhr.addEventListener('abort', function() {
+                        resetProgress('Upload canceled.');
+                    });
+
+                    xhr.addEventListener('timeout', function() {
+                        resetProgress('Upload timed out. Please try again with a stable connection.');
+                    });
+
+                    xhr.send(new FormData(adminForm));
+                });
+            }
+        });
+    </script>
+</body>
+</html>

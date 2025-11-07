@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Analytics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --info: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        
+        body {
+            background-color: #f8f9fc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card {
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            border-top: 4px solid;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card.primary { border-color: var(--primary); }
+        .stat-card.success { border-color: var(--success); }
+        .stat-card.info { border-color: var(--info); }
+        .stat-card.warning { border-color: #f8961e; }
+        
+        .stat-card h3 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: #6c757d;
+            margin-bottom: 0;
+        }
+        
+        .stat-card .icon {
+            font-size: 2rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem 0.5rem 0 0 !important;
+        }
+        
+        .table-responsive {
+            border-radius: 0.5rem;
+        }
+        
+        .table {
+            margin-bottom: 0;
+        }
+        
+        .table th {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            border-top: none;
+        }
+        
+        .badge {
+            font-weight: 500;
+            padding: 0.35em 0.65em;
+        }
+        
+        .btn-back {
+            background-color: white;
+            color: var(--primary);
+            border: none;
+            font-weight: 500;
+        }
+        
+        .btn-back:hover {
+            background-color: rgba(255,255,255,0.9);
+            color: var(--secondary);
+        }
+        
+        .progress {
+            height: 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        .progress-bar {
+            background-color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid px-4 py-4">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2 class="mb-1"><i class="fas fa-chart-pie me-2"></i>Analytics Dashboard</h2>
+                    <p class="mb-0">Overview of your website performance</p>
+                </div>
+                <a href="/admin" class="btn btn-back">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Admin
+                </a>
+            </div>
+        </div>
+        
+        <!-- Summary Stats -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card primary">
+                    <div class="icon text-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="text-primary">{{ total_visits }}</h3>
+                    <p>Total Visits</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card success">
+                    <div class="icon text-success">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <h3 class="text-success">{{ unique_visitors }}</h3>
+                    <p>Unique Visitors</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card info">
+                    <div class="icon text-info">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <h3 class="text-info">{{ watch_now_clicks }}</h3>
+                    <p>Watch Now Clicks</p>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+                <div class="stat-card warning">
+                    <div class="icon text-warning">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <h3 class="text-warning">{{ conversion_rate }}%</h3>
+                    <p>Conversion Rate</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Charts Row -->
+        <div class="row mb-4">
+            <!-- Traffic Chart -->
+            <div class="col-lg-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-chart-line me-2"></i>Daily Activity (Last 30 Days)
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Traffic Sources -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <i class="fas fa-mobile-alt me-2"></i>Traffic Sources
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="deviceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Movies Table -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <i class="fas fa-film me-2"></i>All Movies - Watch Now Clicks
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Movie</th>
+                                <th>Watch Now Clicks</th>
+                                <th>Percentage</th>
+                                <th style="width: 30%">Progress</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_clicks = most_watched | sum(attribute='watch_count') %}
+                            {% for movie in most_watched %}
+                            <tr>
+                                <td>{{ movie_titles.get(movie['movie_id'], 'Unknown') }}</td>
+                                <td>{{ movie['watch_count'] }}</td>
+                                <td>{{ ((movie['watch_count'] / total_clicks) * 100) | round(1) }}%</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar" 
+                                             role="progressbar" 
+                                             style="width: {{ ((movie['watch_count'] / total_clicks) * 100) | round(1) }}%" 
+                                             aria-valuenow="{{ movie['watch_count'] }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="{{ total_clicks }}">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simplified Traffic Chart - Only Unique Visitors and Watch Now Clicks
+        const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+        const trafficChart = new Chart(trafficCtx, {
+            type: 'line',
+            data: {
+                labels: [{% for day in daily_traffic %}'{{ day['formatted_date'] }}'{% if not loop.last %},{% endif %}{% endfor %}],
+                datasets: [
+                    {
+                        label: 'Unique Visitors',
+                        data: [{% for day in daily_traffic %}{{ day['unique_visitors'] }}{% if not loop.last %},{% endif %}{% endfor %}],
+                        borderColor: '#4cc9f0',
+                        backgroundColor: 'rgba(76, 201, 240, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true
+                    },
+                    {
+                        label: 'Watch Now Clicks',
+                        data: [{% for day in daily_traffic %}{{ day['watch_now_clicks'] }}{% if not loop.last %},{% endif %}{% endfor %}],
+                        borderColor: '#4895ef',
+                        backgroundColor: 'rgba(72, 149, 239, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.2,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0,0,0,0.05)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Simplified Device Chart
+        const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+        const deviceChart = new Chart(deviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Desktop', 'Mobile', 'Tablet'],
+                datasets: [{
+                    data: [
+                        {{ device_distribution | selectattr('device_type', 'equalto', 'Desktop') | map(attribute='count') | sum }},
+                        {{ device_distribution | selectattr('device_type', 'equalto', 'Mobile') | map(attribute='count') | sum }},
+                        {{ device_distribution | selectattr('device_type', 'equalto', 'Tablet') | map(attribute='count') | sum }}
+                    ],
+                    backgroundColor: ['#4361ee', '#4cc9f0', '#4895ef'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

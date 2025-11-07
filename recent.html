@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Recently Added - MOVIE99.FUN{% endblock %}
+
+{% block content %}
+    <h1 class="page-title">Recently Added</h1>
+    
+    {% if movies %}
+        <div class="movie-grid">
+            {% for movie in movies %}
+            <div class="movie-card">
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}">
+                    {% set poster_src = media_url(movie.image, 'images', url_for('static', filename='images/placeholder.jpg')) %}
+                <img src="{{ poster_src }}" 
+                    alt="{{ movie.title }}"
+                    loading="lazy">
+                    <span class="movie-quality hd">HD</span>
+                    <div class="movie-info">
+                        <div class="movie-title">{{ movie.title }}</div>
+                        <div class="movie-meta">
+                            <span>{{ movie.year }}</span>
+                            <span>{{ movie.language }}</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            No recent movies available.
+        </div>
+    {% endif %}
+
+    <div class="footer-links">
+        <a href="{{ url_for('home') }}">← Back to Home</a>
+    </div>
+{% endblock %}

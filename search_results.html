@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Search Results for "{{ query }}" - coolgenz.com</title>
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #e50914;
+            --primary-dark: #b20710;
+            --dark: #121212;
+            --darker: #0a0a0a;
+            --light: #ffffff;
+            --gray: #333333;
+            --light-gray: #aaaaaa;
+            --nav-hover: #2a2a2a;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: var(--dark);
+            color: var(--light);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        
+        /* Navbar - Matching Home Page */
+        .navbar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 2rem;
+            background-color: var(--darker);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        
+        .logo {
+            font-family: 'Russo One', sans-serif;
+            font-size: 1.8rem;
+            color: var(--light); /* Changed from var(--primary) to var(--light) */
+            text-decoration: none;
+            text-align: center;
+            letter-spacing: 1px;
+            transition: color 0.3s;
+        }
+        
+        .logo:hover {
+            color: var(--primary); /* Changed from var(--light) to var(--primary) */
+        }
+        
+        .rgb-line {
+            height: 3px;
+            background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
+            margin-top: 5px;
+            width: 100%;
+            border-radius: 3px;
+        }
+        
+        /* Search Results Header */
+        .search-header {
+            text-align: center;
+            padding: 1.5rem 1rem;
+        }
+        
+        .search-header h2 {
+            font-size: 1.5rem;
+            color: var(--light);
+            margin-bottom: 0.5rem;
+        }
+        
+        .search-query {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        /* Results Container */
+        .results-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.2rem 2rem;
+        }
+        
+        /* Movie Grid */
+        .movie-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 1rem;
+            padding: 1rem 0;
+        }
+        
+        @media (min-width: 768px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 1.5rem;
+            }
+            
+            .search-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+        
+        @media (min-width: 1024px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+        }
+        
+        /* Movie Card - Matching Home Page */
+        .movie-card {
+            background: #1a1a2e;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .movie-card:hover {
+            transform: scale(1.05);
+            z-index: 5;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        
+        .movie-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: block;
+        }
+        
+        .movie-card:hover img {
+            transform: scale(1.03);
+        }
+        
+        .movie-title {
+            padding: 12px;
+            margin: 0;
+            font-size: 0.95rem;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--light);
+        }
+        
+        .movie-quality {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.65rem;
+            font-weight: bold;
+        }
+        
+        .movie-quality.hd {
+            background-color: #007bff;
+        }
+        
+        /* No Results */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+        
+        .no-results p {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--light);
+        }
+        
+        .suggestion {
+            color: var(--light-gray);
+            font-style: italic;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            }
+            
+            .movie-card img {
+                height: 200px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .movie-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 0.8rem;
+            }
+            
+            .movie-card img {
+                height: 180px;
+            }
+            
+            .movie-title {
+                font-size: 0.85rem;
+                padding: 8px;
+            }
+            
+            .navbar {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Matching Home Page -->
+    <header class="navbar">
+        <div class="logo-container">
+            <a href="/" class="logo">COOLGENZ.COM</a>
+            <div class="rgb-line"></div>
+        </div>
+    </header>
+
+    <div class="search-header">
+        <h2>Search Results for <span class="search-query">"{{ query }}"</span></h2>
+    </div>
+
+    <div class="results-container">
+        <div class="movie-grid">
+            {% if movies %}
+                {% for movie in movies %}
+                <div class="movie-card">
+                    <a href="{{ url_for('movie_detail', movie_id=movie.id) }}">
+                        {% set poster_src = media_url(movie.image, 'images', url_for('static', filename='images/placeholder.jpg')) %}
+                        <img src="{{ poster_src }}" 
+                             alt="{{ movie.title }}"
+                             loading="lazy">
+                        <span class="movie-quality hd">HD</span>
+                        <p class="movie-title">{{ movie.title }}</p>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">
+                    <p>No movies found matching <span class="search-query">"{{ query }}"</span></p>
+                    <p class="suggestion">Try different keywords or check spelling</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+    // Simple script to handle logo hover effect
+    document.addEventListener('DOMContentLoaded', function() {
+        const logo = document.querySelector('.logo');
+        if (logo) {
+            logo.addEventListener('mouseenter', function() {
+                this.style.color = 'var(--primary)';
+            });
+            logo.addEventListener('mouseleave', function() {
+                this.style.color = 'var(--light)';
+            });
+        }
+    });
+    </script>
+</body>
+</html>

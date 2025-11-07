@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Genres - </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom, #000000, #0f0f0f);
+            color: #f1f5f9;
+        }
+
+        .genre-card {
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #ac2c2c 0%, #0a0f1c 100%);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #0f0c18;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+        }
+
+        .genre-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(to bottom right,
+                    rgba(59, 130, 246, 0.15) 0%,
+                    rgba(59, 130, 246, 0) 60%);
+            transform: rotate(30deg);
+            transition: all 0.6s ease;
+        }
+
+        .genre-card:hover {
+            transform: translateY(-6px) scale(1.03);
+            box-shadow: 0 20px 30px -5px rgba(59, 130, 246, 0.4),
+                0 10px 15px -5px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            z-index: 10;
+        }
+
+        .genre-card:hover::before {
+            left: 0;
+            top: 0;
+            transform: rotate(0);
+        }
+
+        .genre-title {
+            position: relative;
+            z-index: 2;
+            font-weight: 700;
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .genre-count {
+            position: relative;
+            z-index: 2;
+            background: rgba(59, 130, 246, 0.15);
+            padding: 4px 14px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            backdrop-filter: blur(6px);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        .section-title {
+            position: relative;
+            display: inline-block;
+            color: #e0f2fe;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, transparent);
+            border-radius: 3px;
+        }
+
+        .genre-icon {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+            opacity: 0.08;
+            transition: all 0.3s ease;
+        }
+
+        .genre-card:hover .genre-icon {
+            opacity: 0.2;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body class="text-slate-50 min-h-screen">
+    {% extends 'base.html' %}
+    {% block content %}
+    <div class="container mx-auto px-4 py-12 max-w-7xl">
+
+        <!-- Genres Section -->
+        <section>
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="section-title text-3xl font-bold">All Genres</h2>
+                <div class="text-slate-400">{{ genre_counts.values()|sum }} titles available</div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                {% for genre, count in genre_counts.items() %}
+                <a href="{{ url_for('genre', genre_name=genre) }}"
+                    class="genre-card rounded-xl p-6 flex flex-col items-center justify-center hover:border-blue-500/50">
+                    <span class="genre-title text-xl mb-2">{{ genre }}</span>
+                    <span class="genre-count text-blue-400">{{ count }} titles</span>
+
+                    <!-- Genre icon based on genre type -->
+                    <div class="absolute bottom-2 right-2 genre-icon text-blue-400">
+                        {% if genre in ['Action', 'Adventure', 'Fantasy', 'Sci-Fi'] %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        {% elif genre in ['Comedy', 'Romance', 'Musical'] %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        {% elif genre in ['Horror', 'Thriller', 'Mystery'] %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M20.618 5.984A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016zM12 9v2m0 4h.01" />
+                        </svg>
+                        {% elif genre in ['Drama', 'History', 'Biography'] %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                        </svg>
+                        {% endif %}
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+    {% endblock %}
+
+    <script async type="application/javascript" src="https://a.pemsrv.com/ad-provider.js"></script>
+    <ins class="eas6a97888e33" data-zoneid="5750050"></ins>
+    <script>(AdProvider = window.AdProvider || []).push({ "serve": {} });</script>
+</body>
+
+</html>
